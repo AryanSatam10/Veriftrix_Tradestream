@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tradestream_api
+    ports:
+      - "8000:8000"
+    # Point directly to your updated .env file
+    env_file:
+      - ./backend/.env
+    # Ensure the DB is fully ready before the API boots up
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - tradestream_net
+    # Optional: Maps your local code to the container for live-reloading during development
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+
+  db:
+    # Use Alpine Linux for an ultra-lightweight database container
+    image: postgres:15-alpine
+    container_name: tradestream_db
+    environment:
+      # These MUST match the credentials in your .env DATABASE_URL
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: your_local_password
+      POSTGRES_DB: tradestream
+    ports:
+      - "5432:5432"
+    volumes:
+      # Persist data so you don't lose records when the container stops
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - tradestream_net
+    # Enterprise Best Practice: Healthchecks ensure the DB is actually accepting connections
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d tradestream"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+networks:
+  tradestream_net:
+    driver: bridge
+
+volumes:
+  postgres_data:
