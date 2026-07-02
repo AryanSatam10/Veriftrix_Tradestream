@@ -1,0 +1,11 @@
+# Frontend
+frontend/node_modules/
+frontend/build/
+.DS_Store
+
+# Backend
+backend/venv/
+backend/__pycache__/
+backend/.env
+backend/transaction_cache.json
+backend/temp_uploads/
